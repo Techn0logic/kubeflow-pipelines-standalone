@@ -1,0 +1,15 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: pipeline-api
+  labels:
+    app: pipeline-api
+    release: {{ .Release.Name }}
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: pipeline-api
+subjects:
+  - kind: ServiceAccount
+    name: pipeline-api
+    namespace: {{ .Release.Namespace }}

@@ -1,0 +1,26 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: pipeline-api-config
+  labels:
+    app: pipeline-api
+    release: {{ .Release.Name }}
+data:
+    config.json: |-
+        {
+          "DBConfig": {
+            "Host": "mysql",
+            "Port": 3306,
+            "DriverName": "mysql",
+            "DataSourceName": "",
+            "DBName": "{{ .Values.mysql.auth.database | default "kubeflow"}}",
+            "GroupConcatMaxLen": "4194304"
+          },
+          "ObjectStoreConfig": {
+            "BucketName": "mlpipeline",
+            "PipelinePath": "pipelines"
+          },
+          "InitConnectionTimeout": "6m",
+          "CacheEnabled": "false"
+        }
+    ConMaxLifeTime: "120s"

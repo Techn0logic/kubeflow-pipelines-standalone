@@ -1,0 +1,107 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: pipeline-api
+  labels:
+    app: pipeline-api
+    release: {{ .Release.Name }}
+spec:
+  selector:
+    matchLabels:
+      app: pipeline-api
+      release: {{ .Release.Name }}
+  template:
+    metadata:
+      labels:
+        app: pipeline-api
+        release: {{ .Release.Name }}
+    spec:
+      securityContext:
+        {{- toYaml .Values.pipeline.api.securityContext | nindent 12 }}
+      containers:
+        - env:
+            - name: POD_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+            - name: DBCONFIG_USER
+              valueFrom:
+                secretKeyRef:
+                  name: mysql-secret
+                  key: mysql-username
+            - name: DBCONFIG_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: mysql-secret
+                  key: mysql-password
+            - name: DBCONFIG_CONMAXLIFETIME
+              valueFrom:
+                configMapKeyRef:
+                  name: pipeline-api-config
+                  key: ConMaxLifeTime
+            - name: MINIO_SERVICE_SERVICE_HOST
+              value: 'minio:9000'
+            - name: OBJECTSTORECONFIG_ACCESSKEY
+              valueFrom:
+                secretKeyRef:
+                  name: minio
+                  key: root-user
+            - name: OBJECTSTORECONFIG_SECRETACCESSKEY
+              valueFrom:
+                secretKeyRef:
+                  name: minio
+                  key: root-password
+            - name: DEFAULTPIPELINERUNNERSERVICEACCOUNT
+              value: "pipeline-runner"
+            - name: ML_PIPELINE_VISUALIZATIONSERVER_SERVICE_HOST
+              value: 'visualization-server'
+            - name: ML_PIPELINE_VISUALIZATIONSERVER_SERVICE_PORT
+              value: '8888'
+          image: {{ .Values.pipeline.api.image }}
+          imagePullPolicy: IfNotPresent
+          name: pipeline-api
+          resources:
+            {{- toYaml .Values.pipeline.api.resources | nindent 12 }}
+          ports:
+            - name: http
+              containerPort: 8888
+            - name: grpc
+              containerPort: 8887
+          readinessProbe:
+            httpGet:
+              path: /apis/v1beta1/healthz
+              port: http
+            initialDelaySeconds: 3
+            periodSeconds: 5
+            timeoutSeconds: 2
+          livenessProbe:
+            httpGet:
+              path: /apis/v1beta1/healthz
+              port: http
+            initialDelaySeconds: 3
+            periodSeconds: 5
+            timeoutSeconds: 2
+          volumeMounts:
+          - mountPath: /config/config.json
+            name: config
+            subPath: config.json
+      volumes:
+      - name: config
+        configMap:
+          name: pipeline-api-config
+      serviceAccountName: pipeline-api
+      {{- with .Values.pipeline.api.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- if .Values.pipeline.api.priorityClassName }}
+      priorityClassName: {{ .Values.pipeline.api.priorityClassName }}
+      {{- end }}
+      {{- with .Values.pipeline.api.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.pipeline.api.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
