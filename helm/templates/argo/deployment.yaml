@@ -1,0 +1,76 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: argo-workflow-controller
+  labels:
+    app: argo
+    release: "{{ .Release.Name }}"
+spec:
+  selector:
+    matchLabels:
+      app: argo
+      release: "{{ .Release.Name }}"
+  template:
+    metadata:
+      labels:
+        app: argo
+        release: "{{ .Release.Name }}"
+    spec:
+      serviceAccountName: argo
+      containers:
+        - name: argo-workflow-controller
+          image: "{{ .Values.argo.argoworkflowcontroller.image }}"
+          command:
+            - workflow-controller
+          args:
+            - --configmap
+            - argo-workflow-controller-configmap
+            - --executor-image
+            - "{{ .Values.argo.executor.image }}"
+            - --namespaced
+          env:
+          - name: LEADER_ELECTION_IDENTITY
+            valueFrom:
+              fieldRef:
+                apiVersion: v1
+                fieldPath: metadata.name
+          ports:
+            - name: metrics
+              containerPort: 9090
+            - containerPort: 6060
+          livenessProbe:
+            failureThreshold: 3
+            httpGet:
+              path: /healthz
+              port: 6060
+            initialDelaySeconds: 90
+            periodSeconds: 60
+            timeoutSeconds: 30
+          resources:
+            requests:
+              cpu: 100m
+              memory: 500Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+              - ALL
+            readOnlyRootFilesystem: true
+            runAsNonRoot: true
+      securityContext:
+        {{- toYaml .Values.argo.securityContext | nindent 12 }}
+      {{- with .Values.argo.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- if .Values.argo.priorityClassName }}
+      priorityClassName: {{ .Values.argo.priorityClassName }}
+      {{- end }}
+      {{- with .Values.argo.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.argo.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
