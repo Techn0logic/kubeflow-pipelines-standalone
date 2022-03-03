@@ -1,0 +1,74 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: pipeline-ui
+  labels:
+    app: pipeline-ui
+    release: {{ .Release.Name }}
+spec:
+  selector:
+    matchLabels:
+      app: pipeline-ui
+      release: {{ .Release.Name }}
+  template:
+    metadata:
+      labels:
+        app: pipeline-ui
+        release: {{ .Release.Name }}
+    spec:
+      securityContext:
+        {{- toYaml .Values.pipeline.ui.securityContext | nindent 12 }}
+      containers:
+        - env:
+            - name: ML_PIPELINE_SERVICE_HOST
+              value: 'pipeline-api'
+            - name: ML_PIPELINE_SERVICE_PORT
+              value: '8888'
+            - name: MINIO_NAMESPACE
+              value: {{ .Release.Namespace }}
+            - name: ALLOW_CUSTOM_VISUALIZATIONS
+              value: "true"
+            - name: DEPLOYMENT
+              value: MARKETPLACE
+            - name: METADATA_ENVOY_SERVICE_SERVICE_HOST
+              value: "metadata-envoy"
+            - name: METADATA_ENVOY_SERVICE_SERVICE_PORT
+              value: '9090'
+          image: {{ .Values.pipeline.ui.image }}
+          imagePullPolicy: IfNotPresent
+          name: pipeline-ui
+          resources:
+            {{- toYaml .Values.pipeline.ui.resources | nindent 12 }}
+          ports:
+            - name: http
+              containerPort: 3000
+          readinessProbe:
+            httpGet:
+              path: /apis/v1beta1/healthz
+              port: http
+            initialDelaySeconds: 3
+            periodSeconds: 5
+            timeoutSeconds: 2
+          livenessProbe:
+            httpGet:
+              path: /apis/v1beta1/healthz
+              port: http
+            initialDelaySeconds: 3
+            periodSeconds: 5
+            timeoutSeconds: 2
+      serviceAccountName: pipeline-ui
+      {{- with .Values.pipeline.ui.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- if .Values.pipeline.ui.priorityClassName }}
+      priorityClassName: {{ .Values.pipeline.ui.priorityClassName }}
+      {{- end }}
+      {{- with .Values.pipeline.ui.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.pipeline.ui.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
