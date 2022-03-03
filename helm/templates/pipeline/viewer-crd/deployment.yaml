@@ -1,0 +1,47 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: viewer-crd
+  labels:
+    app: viewer-crd
+    release: {{ .Release.Name }}
+spec:
+  selector:
+    matchLabels:
+      app: viewer-crd
+      release: {{ .Release.Name }}
+  template:
+    metadata:
+      labels:
+        app: viewer-crd
+        release: {{ .Release.Name }}
+    spec:
+      securityContext:
+        {{- toYaml .Values.pipeline.viewer.securityContext | nindent 12 }}
+      containers:
+        - env:
+            - name: MAX_NUM_VIEWERS
+              value: "50"
+            - name: NAMESPACE
+              value: {{ .Release.Namespace }}
+          image: {{ .Values.pipeline.viewer.image }}
+          imagePullPolicy: IfNotPresent
+          name: viewer-crd
+          resources:
+            {{- toYaml .Values.pipeline.viewer.resources | nindent 12 }}
+      {{- with .Values.pipeline.viewer.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- if .Values.pipeline.viewer.priorityClassName }}
+      priorityClassName: {{ .Values.pipeline.viewer.priorityClassName }}
+      {{- end }}
+      {{- with .Values.pipeline.viewer.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.pipeline.viewer.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: viewer-crd
