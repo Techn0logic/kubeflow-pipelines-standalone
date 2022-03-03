@@ -1,0 +1,13 @@
+apiVersion: v2
+name: kf-pipelines-standalone
+description: A Helm chart for deploying kubeflow pipelines standalone service.
+type: application
+version: 0.1.0
+icon: file://logo.png
+dependencies:
+- name: minio
+  version: 10.1.9
+  repository: https://charts.bitnami.com/bitnami
+- name: mysql
+  version: 8.8.23
+  repository: https://charts.bitnami.com/bitnami

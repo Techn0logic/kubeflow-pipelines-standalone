@@ -1,0 +1,125 @@
+executor:
+  emissary: false
+
+managedstorage:
+  enabled: false
+  
+minio:
+  fullnameOverride: "minio"
+  mode: standalone
+  replicas: 4
+  disableWebUI: false
+  persistence:
+    enabled: true
+    size: 1Gi
+
+mysql:
+  fullnameOverride: "mysql"
+  image: 
+    tag: 5.7
+  auth:
+    database: kubeflow
+    username: kubeflow
+    existingSecret: mysql-secret
+    
+argo:
+  # Argo workflow controller
+  executor:
+    image: gcr.io/ml-pipeline/google/pipelines/argoexecutor:1.8.0
+  argoworkflowcontroller:
+    image: gcr.io/ml-pipeline/google/pipelines/argoworkflowcontroller:1.8.0
+  securityContext: {}
+  resources: {}
+  nodeSelector: {}
+  priorityClassName: {}
+  affinity: {}
+  tolerations: {}
+
+metadata:
+  # Metadata services.
+  envoy:
+    # Metadata envoy service.
+    image: gcr.io/ml-pipeline/google/pipelines/metadataenvoy:1.8.0
+    securityContext: {}
+    resources: {}
+    nodeSelector: {}
+    priorityClassName: {}
+    affinity: {}
+    tolerations: {}
+  grpc:
+    # Metadata grpc service.
+    image: gcr.io/ml-pipeline/google/pipelines/metadataserver:1.8.0
+    securityContext: {}
+    resources: {}
+    nodeSelector: {}
+    priorityClassName: {}
+    affinity: {}
+    tolerations: {}
+  writer:
+    # Metadata writer service.
+    image: gcr.io/ml-pipeline/google/pipelines/metadatawriter:1.8.0
+    securityContext: {}
+    resources: {}
+    nodeSelector: {}
+    priorityClassName: {}
+    affinity: {}
+    tolerations: {}
+    
+pipeline:
+  # Persistence agent component
+  persistenceagent:
+    image: gcr.io/ml-pipeline/google/pipelines/persistenceagent:1.8.0
+    securityContext: {}
+    resources: {}
+    nodeSelector: {}
+    priorityClassName: {}
+    affinity: {}
+    tolerations: {}
+  api:
+    # Pipeline api server.
+    image: gcr.io/ml-pipeline/google/pipelines/apiserver:1.8.0
+    securityContext: {}
+    resources: {}
+    nodeSelector: {}
+    priorityClassName: {}
+    affinity: {}
+    tolerations: {}
+  ui:
+    # Pipeline frontend.
+    image: gcr.io/ml-pipeline/google/pipelines/frontend:1.8.0
+    securityContext: {}
+    resources: {}
+    nodeSelector: {}
+    priorityClassName: {}
+    affinity: {}
+    tolerations: {}
+    ingress:
+      tls:
+        certsSecret: null
+  scheduledworkflow:
+    # Pipeline scheduled workflow - allows for scheduling pipeline runs periodically.
+    image: gcr.io/ml-pipeline/google/pipelines/scheduledworkflow:1.8.0
+    securityContext: {}
+    resources: {}
+    nodeSelector: {}
+    priorityClassName: {}
+    affinity: {}
+    tolerations: {}
+  viewer:
+    # Viewer crd.
+    image: gcr.io/ml-pipeline/google/pipelines/viewercrd:1.8.0
+    securityContext: {}
+    resources: {}
+    nodeSelector: {}
+    priorityClassName: {}
+    affinity: {}
+    tolerations: {}
+  visualisationserver:
+    # Creates visualisations and plots to display pipeline run results and metrics.
+    image: gcr.io/ml-pipeline/google/pipelines/visualizationserver:1.8.0
+    securityContext: {}
+    resources: {}
+    nodeSelector: {}
+    priorityClassName: {}
+    affinity: {}
+    tolerations: {}
