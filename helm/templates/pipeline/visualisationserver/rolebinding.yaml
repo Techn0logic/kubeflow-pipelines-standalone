@@ -1,0 +1,15 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: visualization-server
+  labels:
+    app: visualization-server
+    release: {{ .Release.Name }}
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: visualization-server
+subjects:
+  - kind: ServiceAccount
+    name: visualization-server
+    namespace: {{ .Release.Namespace }}

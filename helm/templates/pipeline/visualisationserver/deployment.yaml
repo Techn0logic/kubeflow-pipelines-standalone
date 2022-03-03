@@ -1,0 +1,59 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: visualization-server
+  labels:
+    app: visualization-server
+    release: {{ .Release.Name }}
+spec:
+  selector:
+    matchLabels:
+      app:  visualization-server
+      release: {{ .Release.Name }}
+  template:
+    metadata:
+      labels:
+        app:  visualization-server
+        release: {{ .Release.Name }}
+    spec:
+      securityContext:
+        {{- toYaml .Values.pipeline.visualisationserver.securityContext | nindent 12 }}
+      containers:
+        - image: {{ .Values.pipeline.visualisationserver.image }}
+          imagePullPolicy: Always
+          name: visualization-server
+          resources:
+            {{- toYaml .Values.pipeline.visualisationserver.resources | nindent 12 }}
+          ports:
+            - name: http
+              containerPort: 8888
+          readinessProbe:
+            httpGet:
+              path: /
+              port: http
+            initialDelaySeconds: 3
+            periodSeconds: 5
+            timeoutSeconds: 2
+          livenessProbe:
+            httpGet:
+              path: /
+              port: http
+            initialDelaySeconds: 3
+            periodSeconds: 5
+            timeoutSeconds: 2
+      {{- with .Values.pipeline.visualisationserver.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- if .Values.pipeline.visualisationserver.priorityClassName }}
+      priorityClassName: {{ .Values.pipeline.visualisationserver.priorityClassName }}
+      {{- end }}
+      {{- with .Values.pipeline.visualisationserver.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.pipeline.visualisationserver.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: visualization-server
