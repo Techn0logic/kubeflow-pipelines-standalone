@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: metadata-grpc
+  labels:
+    app: metadata-grpc
+    release: {{ .Release.Name }}
+data:
+  MYSQL_DATABASE: '{{ .Values.mysql.auth.database | default "kubeflow"}}'
+  MYSQL_HOST: "mysql"
+  MYSQL_PORT: "3306"

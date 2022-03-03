@@ -1,0 +1,55 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: metadata-envoy
+  labels:
+    app: metadata-envoy
+    release: {{ .Release.Name }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: metadata-envoy
+      release: {{ .Release.Name }}
+  template:
+    metadata:
+      labels:
+        app: metadata-envoy
+        release: {{ .Release.Name }}
+    spec:
+      securityContext:
+        {{- toYaml .Values.metadata.envoy.securityContext | nindent 12 }}
+      containers:
+        - name: metadata-envoy
+          image: {{ .Values.metadata.envoy.image  }}
+          resources:
+            {{- toYaml .Values.metadata.envoy.resources | nindent 12 }}
+          ports:
+            - name: md-envoy
+              containerPort: 9090
+            - name: envoy-admin
+              containerPort: 9901
+          volumeMounts:
+          - mountPath: /etc/envoy.yaml
+            name: envoy-config
+            subPath: config.json
+      volumes:
+      - name: envoy-config
+        configMap:
+          name: metadata-envoy
+      serviceAccountName: metadata-envoy
+      {{- with .Values.metadata.envoy.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- if .Values.metadata.envoy.priorityClassName }}
+      priorityClassName: {{ .Values.metadata.envoy.priorityClassName }}
+      {{- end }}
+      {{- with .Values.metadata.envoy.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.metadata.envoy.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
