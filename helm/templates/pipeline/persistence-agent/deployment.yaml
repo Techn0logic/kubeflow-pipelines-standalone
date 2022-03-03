@@ -1,0 +1,56 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: persistence-agent
+  labels:
+    app: persistence-agent
+    release: {{ .Release.Name }}
+spec:
+  selector:
+    matchLabels:
+      app: persistence-agent
+      release: {{ .Release.Name }}
+  template:
+    metadata:
+      labels:
+        app: persistence-agent
+        release: {{ .Release.Name }}
+    spec:
+      securityContext:
+        {{- toYaml .Values.pipeline.persistenceagent.securityContext | nindent 12 }}
+      containers:
+        - env:
+            - name: NAMESPACE
+              value: {{ .Release.Namespace }}
+            - name: TTL_SECONDS_AFTER_WORKFLOW_FINISH
+              value: "86400"
+          image: {{ .Values.pipeline.persistenceagent.image }}
+          imagePullPolicy: IfNotPresent
+          name: persistence-agent
+          command: [ "persistence_agent" ]
+          args:
+            - -mlPipelineAPIServerName
+            - 'pipeline-api'
+            - -logtostderr=true
+            - -namespace={{ .Release.Namespace }}
+            - -ttlSecondsAfterWorkflowFinish=86400
+            - -numWorker
+            - "2"
+          resources:
+            {{- toYaml .Values.pipeline.persistenceagent.resources | nindent 12 }}
+      serviceAccountName: pipeline-api
+      {{- with .Values.pipeline.persistenceagent.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- if .Values.pipeline.persistenceagent.priorityClassName }}
+      priorityClassName: {{ .Values.pipeline.persistenceagent.priorityClassName }}
+      {{- end }}
+      {{- with .Values.pipeline.persistenceagent.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.pipeline.persistenceagent.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
