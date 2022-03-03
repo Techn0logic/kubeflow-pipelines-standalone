@@ -1,0 +1,45 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: scheduled-workflow
+  labels:
+    app: scheduled-workflow
+    release: {{ .Release.Name }}
+spec:
+  selector:
+    matchLabels:
+      app: scheduled-workflow
+      release: {{ .Release.Name }}
+  template:
+    metadata:
+      labels:
+        app: scheduled-workflow
+        release: {{ .Release.Name }}
+    spec:
+      securityContext:
+        {{- toYaml .Values.pipeline.scheduledworkflow.securityContext | nindent 12 }}
+      containers:
+        - env:
+            - name: NAMESPACE
+              value: {{ .Release.Namespace }}
+          image: {{ .Values.pipeline.scheduledworkflow.image }}
+          imagePullPolicy: IfNotPresent
+          name: scheduled-workflow
+          resources:
+            {{- toYaml .Values.pipeline.scheduledworkflow.resources | nindent 12 }}
+      serviceAccountName: scheduled-workflow
+      {{- with .Values.pipeline.scheduledworkflow.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- if .Values.pipeline.scheduledworkflow.priorityClassName }}
+      priorityClassName: {{ .Values.pipeline.scheduledworkflow.priorityClassName }}
+      {{- end }}
+      {{- with .Values.pipeline.scheduledworkflow.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.pipeline.scheduledworkflow.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
