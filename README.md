@@ -18,7 +18,7 @@ helm v3.8.0
 ```
 helm install <RELEASE_NAME> ./helm/
 ```
-Wait for deploments to come up
+Wait for deployments to come up
 
 ```
 kubectl get deployments
