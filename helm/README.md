@@ -4,6 +4,8 @@
 
 A Helm chart for deploying kubeflow pipelines standalone service.
 
+-------------------------
+
 ## Requirements
 
 | Repository | Name | Version |
